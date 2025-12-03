@@ -14,13 +14,3 @@ product = "FoodCalc" # --product
 company = "ByteBloom" # --company
 copyright = "Copyright (C) 2025 by ByteBloom" # --copyright
 build_number = 1 # --build-number
-
-[tool.flet.app]
-path = "templates"
-
-[tool.flet.app.boot_screen]
-show = true
-message = "Preparing the app..."
-
-[tool.flet.flutter.dependencies.my_package]
-path = "main.py"
