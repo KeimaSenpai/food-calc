@@ -1,0 +1,23 @@
+[project]
+name = "FoodCalc"
+version = "1.0.1"
+description = "App calculo de comida"
+authors = [
+  {name = "KeimaSenpai", email = "KeimaSenpai@proton.me"}
+]
+dependencies = ["flet==0.28.3", "Flask", "pillow","Werkzeug", "reportlab"]
+
+
+[tool.flet]
+org = "by.bytebloom" # --org
+product = "FoodCalc" # --product
+company = "ByteBloom" # --company
+copyright = "Copyright (C) 2025 by ByteBloom" # --copyright
+build_number = 1 # --build-number
+
+[tool.flet.app]
+path = "templates"
+
+[tool.flet.app.boot_screen]
+show = true
+message = "Preparing the app..."

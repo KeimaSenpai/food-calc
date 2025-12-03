@@ -1,0 +1,66 @@
+name: Windows Build
+
+on:
+  # Allows you to run this workflow manually from the Actions tab of the repository
+  workflow_dispatch:
+
+env:
+  # https://flet.dev/docs/publish#versioning
+  BUILD_NUMBER: 1
+  BUILD_VERSION: 1.0.1
+  PYTHON_VERSION: 3.12.2
+  FLET_CLI_VERSION: 0.28.3
+  PYTHONUTF8: 1
+  FLET_CLI_NO_RICH_OUTPUT: 1
+  UV_NO_PROGRESS: 1
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install flet-cli ${{ env.FLET_CLI_VERSION }}
+      run: |
+        python -m pip install --upgrade pip
+        pip install flet-cli==$env:FLET_CLI_VERSION
+
+    - name: Flet Build Windows
+      run: |
+        flet build windows --verbose --no-rich-output --build-number=$env:BUILD_NUMBER --build-version=$env:BUILD_VERSION
+
+    - name: Compress folder
+      shell: powershell
+      run: |
+        Compress-Archive -Path build/windows -DestinationPath build/FoodCalc.zip
+
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.TOKEN }}
+      with:
+        tag_name: v${{ env.BUILD_VERSION }}
+        release_name: "FoodCalc v${{ env.BUILD_VERSION }}"
+        body: |
+          ## 🚀 Funciones
+          - App calculo de comida
+        draft: false
+        prerelease: false
+
+    - name: Upload Build to Release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: build/FoodCalc.zip  # Path to the zipped file
+        asset_name: FoodCalc.zip
+        asset_content_type: application/zip
