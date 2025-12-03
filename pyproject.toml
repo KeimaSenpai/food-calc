@@ -21,3 +21,6 @@ path = "templates"
 [tool.flet.app.boot_screen]
 show = true
 message = "Preparing the app..."
+
+[tool.flet.flutter.dependencies.my_package]
+path = "main.py"
