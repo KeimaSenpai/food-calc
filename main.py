@@ -13,7 +13,7 @@ import sys
 # Agregar el directorio actual al path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from app import app as flask_app
+from assets.app import app as flask_app
 
 
 class FoodCalculatorApp:
@@ -308,7 +308,8 @@ def main_app():
     """Inicia la aplicación Flet"""
     ft.app(
         target=main,
-        name="Food Calculator"
+        name="Food Calculator",
+        assets_dir="assets"
     )
 
 
