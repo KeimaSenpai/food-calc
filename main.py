@@ -103,7 +103,7 @@ def main(page: ft.Page):
             status_indicator.bgcolor = "#dcfce7"
         else:
             status_indicator.content.controls[0].name = ft.Icons.CIRCLE
-            status_indicator.content.controls[0].color = "#ef4444"
+            status_indicator.content.controls[0].color = "#ce1919"
             status_indicator.content.controls[1].value = "Servidor detenido"
             status_indicator.bgcolor = "#fee2e2"
         page.update()
@@ -186,7 +186,7 @@ def main(page: ft.Page):
                 spacing=8
             ),
         ],
-        spacing=10
+        spacing=11
     )
     
     # ===== EVENTOS =====
