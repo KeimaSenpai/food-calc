@@ -141,12 +141,41 @@
                         </div>
                     </div>
 
+                    <div class="mb-8">
+                        <label for="preparacion" class="block text-gray-300 font-medium mb-2 text-sm uppercase tracking-wider">
+                            🍳 Selecciona Plato
+                        </label>
+                        <div class="relative">
+                            <select 
+                                id="preparacion"
+                                class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none cursor-pointer"
+                            >
+                                <option value="" class="bg-gray-800 text-white">-- Selecciona un plato --</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
+                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="space-y-3">
                         <button 
                             onclick="calcular()"
                             class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3 px-4 rounded-xl transition duration-300 shadow-lg shadow-blue-900/20 transform hover:-translate-y-0.5"
                         >
                             📊 Calcular Cantidades
+                        </button>
+                        <button 
+                            onclick="calcularPreparacion()"
+                            class="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-bold py-3 px-4 rounded-xl transition duration-300 shadow-lg shadow-orange-900/20 transform hover:-translate-y-0.5"
+                        >
+                            🍳 Calcular Plato
+                        </button>
+                        <button 
+                            onclick="calcularRefresco()"
+                            class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 px-4 rounded-xl transition duration-300 shadow-lg shadow-cyan-900/20 transform hover:-translate-y-0.5"
+                        >
+                            🥤 Calcular Refresco
                         </button>
                         <button 
                             onclick="obtenerIngredientes()"
@@ -714,8 +743,167 @@
             document.body.removeChild(elemento);
         }
 
-        // Inicializar Tab Default
+        // Funciones para preparaciones
+        async function cargarPreparaciones() {
+            try {
+                const response = await fetch('/api/preparaciones-disponibles');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const select = document.getElementById('preparacion');
+                    data.preparaciones.forEach(prep => {
+                        const option = document.createElement('option');
+                        option.value = prep;
+                        option.textContent = prep;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error al cargar preparaciones:', error);
+            }
+        }
+
+        async function calcularPreparacion() {
+            const personas = parseInt(document.getElementById('personas').value);
+            const preparacion = document.getElementById('preparacion').value;
+            const formato = document.getElementById('formato').value;
+            
+            if (!preparacion) {
+                alert('Por favor selecciona un plato');
+                return;
+            }
+            
+            if (isNaN(personas) || personas < 1) {
+                alert('Por favor ingresa un número válido de personas');
+                return;
+            }
+
+            mostrarCargando();
+
+            try {
+                const response = await fetch('/api/preparacion', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ personas, preparacion, formato })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+
+                // Mostrar los resultados de la preparación
+                let html = `<div class="mb-6 fade-in">
+                    <div class="flex justify-between items-end mb-6 border-b border-white/10 pb-4">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white">
+                                🍳 ${data.preparacion}
+                            </h3>
+                            <p class="text-sm text-gray-400 mt-1">Para <span class="text-orange-400 font-bold">${data.personas} personas</span></p>
+                        </div>
+                        <span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded border border-gray-700">Ingredientes</span>
+                    </div>`;
+                    
+                html += '<h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">📋 Ingredientes Necesarios</h4>';
+                html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+                
+                for (const [ingrediente, cantidad] of Object.entries(data.ingredientes)) {
+                    // Detectar unidad
+                    let unidad = 'kg';
+                    if (ingrediente === 'Huevos') unidad = 'unidades';
+                    else if (ingrediente.includes('Agua') || ingrediente.includes('Vinagre')) unidad = 'litros';
+                    
+                    const color = unidad === 'litros' ? 'bg-cyan-900/10 border-cyan-500/20 hover:border-cyan-500/40 text-cyan-400' : 
+                                  unidad === 'unidades' ? 'bg-yellow-900/10 border-yellow-500/20 hover:border-yellow-500/40 text-yellow-400' : 
+                                  'bg-orange-900/10 border-orange-500/20 hover:border-orange-500/40 text-orange-400';
+                    
+                    html += `<div class="${color} rounded-xl p-4 flex justify-between items-center transition-all group border">
+                        <span class="font-medium text-gray-200 group-hover:text-white">${ingrediente}</span>
+                        <span class="font-bold text-lg">${cantidad} <span class="text-sm opacity-70">${unidad}</span></span>
+                    </div>`;
+                }
+                html += '</div></div>';
+                document.getElementById('contenidoResultados').innerHTML = html;
+                
+                // Cambiar a tab de resultados si está en otra pestaña
+                cambiarTab('resultados');
+                estadoActual.contenidoActual = data.contenido;
+                document.getElementById('btnDescargar').style.display = 'block';
+                document.getElementById('btnCopiar').style.display = 'block';
+            } catch (error) {
+                alert('Error al calcular: ' + error.message);
+            }
+        }
+
+        async function calcularRefresco() {
+            const personas = parseInt(document.getElementById('personas').value);
+            
+            if (isNaN(personas) || personas < 1) {
+                alert('Por favor ingresa un número válido de personas');
+                return;
+            }
+
+            mostrarCargando();
+
+            try {
+                const response = await fetch('/api/refresco', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ personas })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+
+                // Mostrar los resultados del refresco
+                let html = `<div class="mb-6 fade-in">
+                    <div class="flex justify-between items-end mb-6 border-b border-white/10 pb-4">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white">
+                                🥤 Refresco
+                            </h3>
+                            <p class="text-sm text-gray-400 mt-1">Para <span class="text-cyan-400 font-bold">${data.personas} personas</span></p>
+                        </div>
+                        <span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded border border-gray-700">8 oz por persona</span>
+                    </div>`;
+                    
+                html += '<div class="grid grid-cols-1 gap-4">';
+                html += `<div class="bg-cyan-900/20 border border-cyan-500/40 rounded-xl p-6 flex justify-between items-center transition-all">
+                    <div>
+                        <p class="text-sm text-cyan-300 uppercase tracking-wider mb-1">Cantidad Total en Litros</p>
+                        <p class="text-gray-300">8 oz × ${data.personas} personas</p>
+                    </div>
+                    <span class="font-bold text-4xl text-cyan-400">${data.refresco_litros}<span class="text-lg text-cyan-500/70"> L</span></span>
+                </div>`;
+                html += `<div class="bg-blue-900/20 border border-blue-500/40 rounded-xl p-6 flex justify-between items-center transition-all">
+                    <div>
+                        <p class="text-sm text-blue-300 uppercase tracking-wider mb-1">Onzas Totales</p>
+                        <p class="text-gray-300">Para referencia</p>
+                    </div>
+                    <span class="font-bold text-4xl text-blue-400">${data.refresco_onzas}<span class="text-lg text-blue-500/70"> oz</span></span>
+                </div>`;
+                html += '</div></div>';
+                document.getElementById('contenidoResultados').innerHTML = html;
+                
+                // Cambiar a tab de resultados
+                cambiarTab('resultados');
+                estadoActual.contenidoActual = `Refresco para ${personas} personas:\n- ${data.refresco_litros} litros\n- ${data.refresco_onzas} onzas`;
+                document.getElementById('btnDescargar').style.display = 'block';
+                document.getElementById('btnCopiar').style.display = 'block';
+            } catch (error) {
+                alert('Error al calcular: ' + error.message);
+            }
+        }
+
+        // Inicializar Tab Default y cargar preparaciones
         cambiarTab('resultados');
+        cargarPreparaciones();
     </script>
 </body>
 </html>

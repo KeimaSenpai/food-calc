@@ -25,7 +25,7 @@ def calcular_cantidades_comida(personas):
     # Productos con cantidades en gramos por persona (CRUDO)
     productos_gramos = {
         "Arroz blanco": 100,
-        "Arroz moro": 15,
+        "Arroz moro": 52,
         "Arroz con leche": 10,
         "Frijoles": 45,
         "Carne de cerdo/Fricasé sin hueso": 160,
@@ -252,6 +252,142 @@ def listar_productos_disponibles():
     return sorted(productos)
 
 
+def obtener_preparaciones_disponibles():
+    """
+    Devuelve una lista de preparaciones disponibles.
+    
+    Returns:
+        list: Lista de nombres de preparaciones
+    """
+    preparaciones = {
+        "Arroz blanco": {},
+        "Arroz moro": {},
+        "Frijoles negros": {},
+        "Pollo frito": {},
+        "Picadillo": {},
+        "Espaguetis Napolitanos": {},
+        "Plátanos maduros fritos": {},
+        "Viandas hervidas (Papa/Yuca/Boniato)": {},
+        "Ensalada de col": {},
+        "Huevos revueltos": {},
+    }
+    return sorted(preparaciones.keys())
+
+
+def calcular_preparacion_especifica(personas, nombre_preparacion):
+    """
+    Calcula los ingredientes de una preparación específica.
+    
+    Args:
+        personas (int): Número de personas
+        nombre_preparacion (str): Nombre exacto de la preparación
+        
+    Returns:
+        dict: {'preparacion': str, 'ingredientes': dict, 'personas': int} o None si no existe
+    
+    Ejemplo:
+        >>> resultado = calcular_preparacion_especifica(50, "Espaguetis Napolitanos")
+    """
+    todas_preparaciones = calcular_ingredientes_preparacion(personas)
+    
+    if nombre_preparacion in todas_preparaciones:
+        return {
+            'preparacion': nombre_preparacion,
+            'personas': personas,
+            'ingredientes': todas_preparaciones[nombre_preparacion]
+        }
+    
+    return None
+
+
+def calcular_refresco(personas):
+    """
+    Calcula la cantidad de refresco necesaria (8 onzas por persona convertidas a litros).
+    
+    Args:
+        personas (int): Número de personas
+        
+    Returns:
+        float: Cantidad de refresco en litros
+    
+    Ejemplo:
+        >>> refresco = calcular_refresco(50)
+        >>> print(f"Necesitas {refresco} litros de refresco")
+    """
+    # 8 onzas por persona = 236.588 ml (aproximadamente 0.237 litros)
+    onzas_por_persona = 8
+    ml_por_onza = 29.5735  # 1 onza líquida en ml
+    ml_por_persona = onzas_por_persona * ml_por_onza
+    litros_por_persona = ml_por_persona / 1000
+    
+    total_litros = round(personas * litros_por_persona, 2)
+    
+    return total_litros
+
+
+def formatear_preparacion_especifica(resultado, formato='texto'):
+    """
+    Formatea una preparación específica para mostrarla.
+    
+    Args:
+        resultado (dict): Resultado de calcular_preparacion_especifica()
+        formato (str): 'texto', 'markdown', 'html' o 'lista'
+        
+    Returns:
+        str o list: Resultado formateado
+    """
+    if not resultado:
+        return "Preparación no encontrada"
+    
+    preparacion = resultado['preparacion']
+    personas = resultado['personas']
+    ingredientes = resultado['ingredientes']
+    
+    if formato == 'lista':
+        lista = []
+        for ingrediente, cantidad in ingredientes.items():
+            # Detectar unidad
+            if ingrediente == "Huevos":
+                unidad = "unidades"
+            elif "Agua" in ingrediente or "Vinagre" in ingrediente:
+                unidad = "litros"
+            else:
+                unidad = "kg"
+            
+            lista.append({
+                'preparacion': preparacion,
+                'ingrediente': ingrediente,
+                'cantidad': cantidad,
+                'unidad': unidad
+            })
+        return lista
+    
+    lineas = []
+    
+    if formato == 'markdown':
+        lineas.append(f"**🍳 {preparacion.upper()} - {personas} PERSONAS**\n")
+    elif formato == 'html':
+        lineas.append(f"<b>🍳 {preparacion.upper()} - {personas} PERSONAS</b>\n")
+    else:
+        lineas.append(f"🍳 {preparacion.upper()} - {personas} PERSONAS\n")
+    
+    for ingrediente, cantidad in sorted(ingredientes.items()):
+        # Detectar unidad apropiada
+        if ingrediente == "Huevos":
+            unidad = "unidades"
+        elif "Agua" in ingrediente or "Vinagre" in ingrediente:
+            unidad = "litros"
+        else:
+            unidad = "kg"
+        
+        if formato == 'markdown':
+            lineas.append(f"  • **{ingrediente}:** {cantidad} {unidad}")
+        else:
+            lineas.append(f"  • {ingrediente}: {cantidad} {unidad}")
+    
+    return '\n'.join(lineas)
+
+
 def calcular_ingredientes_preparacion(personas):
     """
     Calcula los ingredientes necesarios para las preparaciones básicas.
@@ -275,8 +411,9 @@ def calcular_ingredientes_preparacion(personas):
             "Sal": 2 * personas / 1000,  # kg
         },
         "Arroz moro": {
-            "Arroz": 15 * personas / 1000,  # kg
-            "Frijoles negros (cocidos)": 30 * personas / 1000,  # kg
+            "Arroz crudo": 52 * personas / 1000,  # kg
+            "Frijol seco": 26 * personas / 1000,  # kg
+            "Agua": 150 * personas / 1000,  # litros
             "Aceite": 3 * personas / 1000,  # kg
             "Cebolla": 10 * personas / 1000,  # kg
             "Ajo": 2 * personas / 1000,  # kg

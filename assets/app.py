@@ -22,7 +22,11 @@ from assets.utils.food_calculator import (
     obtener_producto_especifico,
     listar_productos_disponibles,
     calcular_ingredientes_preparacion,
-    formatear_ingredientes_preparacion
+    formatear_ingredientes_preparacion,
+    obtener_preparaciones_disponibles,
+    calcular_preparacion_especifica,
+    formatear_preparacion_especifica,
+    calcular_refresco
 )
 
 # Configuración de la aplicación
@@ -147,6 +151,71 @@ def obtener_ingredientes():
             'success': True,
             'personas': personas,
             'contenido': contenido
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/preparaciones-disponibles', methods=['GET'])
+def preparaciones_disponibles():
+    """API para listar todas las preparaciones disponibles"""
+    try:
+        preparaciones = obtener_preparaciones_disponibles()
+        return jsonify({
+            'success': True,
+            'preparaciones': preparaciones,
+            'total': len(preparaciones)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/preparacion', methods=['POST'])
+def obtener_preparacion():
+    """API para calcular una preparación específica"""
+    try:
+        data = request.get_json()
+        personas = int(data.get('personas', 1))
+        preparacion = data.get('preparacion', '')
+        formato = data.get('formato', 'texto')
+        
+        if not preparacion:
+            return jsonify({'error': 'Preparación no especificada'}), 400
+        
+        resultado = calcular_preparacion_especifica(personas, preparacion)
+        
+        if resultado:
+            contenido = formatear_preparacion_especifica(resultado, formato=formato)
+            return jsonify({
+                'success': True,
+                'preparacion': resultado['preparacion'],
+                'personas': resultado['personas'],
+                'ingredientes': resultado['ingredientes'],
+                'contenido': contenido
+            })
+        else:
+            return jsonify({'error': 'Preparación no encontrada'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/refresco', methods=['POST'])
+def obtener_refresco():
+    """API para calcular cantidad de refresco"""
+    try:
+        data = request.get_json()
+        personas = int(data.get('personas', 1))
+        
+        if personas < 1:
+            return jsonify({'error': 'Número de personas debe ser mayor a 0'}), 400
+        
+        litros = calcular_refresco(personas)
+        
+        return jsonify({
+            'success': True,
+            'personas': personas,
+            'refresco_litros': litros,
+            'refresco_onzas': personas * 8
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
