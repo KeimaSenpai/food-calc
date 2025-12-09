@@ -392,7 +392,3 @@ def main():
     print("🍳 Food Calculator iniciado")
     print("🌐 Abriendo navegador en http://localhost:5000...")
     app.run(debug=False, host='localhost', port=5000)
-
-
-if __name__ == '__main__':
-    main()
