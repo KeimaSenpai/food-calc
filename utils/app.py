@@ -16,7 +16,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib import colors
 from reportlab.lib.units import inch
 from PIL import Image, ImageDraw, ImageFont
-from assets.utils.food_calculator import (
+from utils.food_calculator import (
     calcular_cantidades_comida,
     formatear_resultados,
     obtener_producto_especifico,
